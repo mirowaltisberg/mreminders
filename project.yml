@@ -1,4 +1,4 @@
-name: DeskMinder
+name: mreminders
 options:
   bundleIdPrefix: com.miro
   deploymentTarget:
@@ -13,27 +13,28 @@ settings:
     SWIFT_STRICT_CONCURRENCY: complete
 
 targets:
-  DeskMinder:
+  mreminders:
     type: application
     platform: macOS
     sources:
-      - path: DeskMinder
+      - path: mreminders
     settings:
       base:
-        INFOPLIST_FILE: DeskMinder/Info.plist
-        CODE_SIGN_ENTITLEMENTS: DeskMinder/DeskMinder.entitlements
-        PRODUCT_BUNDLE_IDENTIFIER: com.miro.deskminder
+        INFOPLIST_FILE: mreminders/Info.plist
+        CODE_SIGN_ENTITLEMENTS: mreminders/mreminders.entitlements
+        PRODUCT_BUNDLE_IDENTIFIER: com.miro.mreminders
         CODE_SIGN_IDENTITY: "-"
-        PRODUCT_NAME: DeskMinder
+        PRODUCT_NAME: mreminders
         COMBINE_HIDPI_IMAGES: YES
 
-  DeskMinderTests:
+  mremindersTests:
     type: bundle.unit-test
     platform: macOS
     sources:
-      - path: DeskMinderTests
+      - path: mremindersTests
     dependencies:
-      - target: DeskMinder
+      - target: mreminders
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.miro.deskminder.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.miro.mreminders.tests
+        GENERATE_INFOPLIST_FILE: YES

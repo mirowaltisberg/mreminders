@@ -5,11 +5,11 @@
     <key>LSUIElement</key>
     <true/>
     <key>NSRemindersUsageDescription</key>
-    <string>DeskMinder syncs your reminders to Apple Reminders so they appear on all your devices.</string>
+    <string>mreminders syncs your reminders to Apple Reminders so they appear on all your devices.</string>
     <key>CFBundleName</key>
-    <string>DeskMinder</string>
+    <string>mreminders</string>
     <key>CFBundleDisplayName</key>
-    <string>DeskMinder</string>
+    <string>mreminders</string>
     <key>CFBundleIdentifier</key>
     <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleVersion</key>
