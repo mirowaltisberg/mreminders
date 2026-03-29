@@ -1,0 +1,39 @@
+name: DeskMinder
+options:
+  bundleIdPrefix: com.miro
+  deploymentTarget:
+    macOS: "14.0"
+  minimumXcodeGenVersion: "2.38.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+
+targets:
+  DeskMinder:
+    type: application
+    platform: macOS
+    sources:
+      - path: DeskMinder
+    settings:
+      base:
+        INFOPLIST_FILE: DeskMinder/Info.plist
+        CODE_SIGN_ENTITLEMENTS: DeskMinder/DeskMinder.entitlements
+        PRODUCT_BUNDLE_IDENTIFIER: com.miro.deskminder
+        CODE_SIGN_IDENTITY: "-"
+        PRODUCT_NAME: DeskMinder
+        COMBINE_HIDPI_IMAGES: YES
+
+  DeskMinderTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: DeskMinderTests
+    dependencies:
+      - target: DeskMinder
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.miro.deskminder.tests
