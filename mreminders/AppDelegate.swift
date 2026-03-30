@@ -10,11 +10,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
-        Task {
-            await reminderManager.requestAccess()
-            await NotificationManager.shared.requestPermission()
-        }
-
         reminderManager.onReminderExpired = { reminder in
             NotificationManager.shared.fireNotification(
                 title: "mreminders",
@@ -22,7 +17,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             )
         }
 
-        reminderManager.startTimer()
+        Task {
+            await reminderManager.requestAccess()
+            await NotificationManager.shared.requestPermission()
+            reminderManager.startTimer()
+        }
 
         let contentView = PillStackView()
             .environment(reminderManager)

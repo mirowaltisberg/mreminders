@@ -1,6 +1,7 @@
 import Foundation
 import EventKit
 import Combine
+import AppKit
 
 @Observable
 @MainActor
@@ -16,8 +17,9 @@ final class ReminderManager {
 
     private let store = EKEventStore()
     private var timerCancellable: AnyCancellable?
+    private var wakeCancellable: AnyCancellable?
     private var deskMinderCalendar: EKCalendar?
-    private var notifiedReminderIDs: Set<UUID> = []
+    private(set) var notifiedReminderIDs: Set<UUID> = []
 
     var onReminderExpired: (@MainActor (ActiveReminder) -> Void)?
 
@@ -41,6 +43,7 @@ final class ReminderManager {
         let calendars = store.calendars(for: .reminder)
         if let existing = calendars.first(where: { $0.title == "mreminders" }) {
             deskMinderCalendar = existing
+            loadActiveReminders()
             return
         }
 
@@ -63,6 +66,31 @@ final class ReminderManager {
         }
     }
 
+    private func loadActiveReminders() {
+        guard let calendar = deskMinderCalendar else { return }
+        let predicate = store.predicateForReminders(in: [calendar])
+        store.fetchReminders(matching: predicate) { [weak self] reminders in
+            guard let self, let reminders else { return }
+            let now = Date()
+            let loaded: [ActiveReminder] = reminders.compactMap { ek in
+                guard !ek.isCompleted,
+                      let alarm = ek.alarms?.first,
+                      let endDate = alarm.absoluteDate,
+                      endDate > now
+                else { return nil }
+                return ActiveReminder(
+                    id: UUID(),
+                    text: ek.title ?? "",
+                    endDate: endDate,
+                    ekReminderID: ek.calendarItemIdentifier
+                )
+            }
+            Task { @MainActor in
+                self.activeReminders = loaded
+            }
+        }
+    }
+
     // MARK: - Timer Engine
 
     func startTimer() {
@@ -75,14 +103,30 @@ final class ReminderManager {
                     self.checkExpired()
                 }
             }
+
+        wakeCancellable = NotificationCenter.default
+            .publisher(for: NSWorkspace.didWakeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                MainActor.assumeIsolated {
+                    self.currentDate = Date()
+                    self.checkExpired()
+                }
+            }
     }
 
     func stopTimer() {
         timerCancellable?.cancel()
         timerCancellable = nil
+        wakeCancellable?.cancel()
+        wakeCancellable = nil
     }
 
-    private func checkExpired() {
+    func checkExpired() {
+        let activeIDs = Set(activeReminders.map(\.id))
+        notifiedReminderIDs.formIntersection(activeIDs)
+
         for reminder in activeReminders {
             if reminder.isExpired(from: currentDate) && !notifiedReminderIDs.contains(reminder.id) {
                 notifiedReminderIDs.insert(reminder.id)
@@ -101,6 +145,10 @@ final class ReminderManager {
         let ekReminder = EKReminder(eventStore: store)
         ekReminder.title = text
         ekReminder.calendar = calendar
+        ekReminder.dueDateComponents = Calendar.current.dateComponents(
+            [.year, .month, .day, .hour, .minute, .second],
+            from: endDate
+        )
         ekReminder.addAlarm(EKAlarm(absoluteDate: endDate))
 
         do {

@@ -50,12 +50,13 @@ struct NewReminderPillView: View {
         HStack(spacing: 5) {
             Image(systemName: "clock")
                 .font(.system(size: 12))
+                .accessibilityHidden(true)
 
             if isEditingTime {
                 TextField("", text: $timeText)
                     .textFieldStyle(.plain)
                     .font(.system(size: 13, weight: .medium).monospacedDigit())
-                    .frame(width: 36)
+                    .frame(width: 44)
                     .multilineTextAlignment(.trailing)
                     .focused($timeFieldFocused)
                     .onSubmit {
@@ -64,9 +65,11 @@ struct NewReminderPillView: View {
                     .onAppear {
                         timeFieldFocused = true
                     }
+                    .accessibilityLabel("Duration in minutes")
 
                 Text("min")
                     .font(.system(size: 13, weight: .medium))
+                    .accessibilityHidden(true)
             } else {
                 Text("\(minutes) min")
                     .font(.system(size: 13, weight: .medium).monospacedDigit())
@@ -74,6 +77,8 @@ struct NewReminderPillView: View {
                         timeText = "\(minutes)"
                         isEditingTime = true
                     }
+                    .accessibilityLabel("Duration: \(minutes) minutes. Tap to edit, scroll to adjust.")
+                    .accessibilityAddTraits(.isButton)
             }
         }
         .foregroundStyle(Color.black.opacity(0.5))
@@ -99,7 +104,7 @@ struct NewReminderPillView: View {
 
     private func adjustMinutes(by delta: Int) {
         let newValue = minutes + delta
-        minutes = min(99, max(1, newValue))
+        minutes = min(999, max(1, newValue))
         timeText = "\(minutes)"
     }
 }
@@ -125,13 +130,13 @@ final class ScrollWheelNSView: NSView {
     private var accumulated: CGFloat = 0
 
     override func scrollWheel(with event: NSEvent) {
-        accumulated += event.scrollingDeltaY
+        accumulated -= event.scrollingDeltaY
         if accumulated > 3 {
             onScroll?(1)
-            accumulated = 0
+            accumulated -= 3
         } else if accumulated < -3 {
             onScroll?(-1)
-            accumulated = 0
+            accumulated += 3
         }
     }
 }

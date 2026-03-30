@@ -55,6 +55,7 @@ struct GlassCircleButton: View {
     }
 
     let style: Style
+    var accessibilityText: String = ""
     let action: () -> Void
 
     var body: some View {
@@ -70,6 +71,14 @@ struct GlassCircleButton: View {
             .frame(width: 30, height: 30)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityText.isEmpty ? defaultAccessibilityLabel : accessibilityText)
+    }
+
+    private var defaultAccessibilityLabel: String {
+        switch style {
+        case .dismiss, .urgentDismiss: "Dismiss"
+        case .add: "Add reminder"
+        }
     }
 
     private var iconView: some View {

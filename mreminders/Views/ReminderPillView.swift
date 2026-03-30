@@ -13,10 +13,22 @@ struct ReminderPillView: View {
         reminder.isExpired(from: currentDate)
     }
 
+    private var accessibilityTimeText: String {
+        let total = reminder.remainingSeconds(from: currentDate)
+        let m = total / 60
+        let s = total % 60
+        if m > 0 {
+            return "\(m) minutes \(s) seconds remaining"
+        } else {
+            return "\(s) seconds remaining"
+        }
+    }
+
     var body: some View {
         HStack(spacing: 8) {
             GlassCircleButton(
                 style: isUrgent || isExpired ? .urgentDismiss : .dismiss,
+                accessibilityText: "Dismiss \(reminder.text)",
                 action: onDelete
             )
 
@@ -24,9 +36,11 @@ struct ReminderPillView: View {
                 HStack(spacing: 5) {
                     Image(systemName: "clock")
                         .font(.system(size: 12))
+                        .accessibilityHidden(true)
                     Text(reminder.displayTime(from: currentDate))
                         .font(.system(size: 13, weight: isUrgent ? .semibold : .medium)
                             .monospacedDigit())
+                        .accessibilityLabel(accessibilityTimeText)
                 }
                 .foregroundStyle(
                     isUrgent || isExpired
@@ -35,6 +49,7 @@ struct ReminderPillView: View {
                 )
 
                 PillSeparator(isUrgent: isUrgent || isExpired)
+                    .accessibilityHidden(true)
 
                 Text(reminder.text)
                     .font(.system(size: 13))
@@ -52,6 +67,7 @@ struct ReminderPillView: View {
                 GlassPillBackground(isUrgent: isUrgent || isExpired)
             }
         }
+        .accessibilityElement(children: .combine)
         .transition(
             .asymmetric(
                 insertion: .move(edge: .bottom).combined(with: .opacity),

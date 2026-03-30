@@ -95,4 +95,66 @@ struct ActiveReminderTests {
         )
         #expect(reminder.displayTime(from: Date()) == "0:00")
     }
+
+    // MARK: - Boundary Cases
+
+    @Test("isUrgent false at exactly 60 seconds")
+    func isUrgentAtExactly60() {
+        let now = Date()
+        let reminder = ActiveReminder(
+            id: UUID(),
+            text: "Test",
+            endDate: now.addingTimeInterval(60),
+            ekReminderID: "test-id"
+        )
+        #expect(reminder.isUrgent(from: now) == false)
+    }
+
+    @Test("isUrgent true at exactly 1 second")
+    func isUrgentAt1Second() {
+        let now = Date()
+        let reminder = ActiveReminder(
+            id: UUID(),
+            text: "Test",
+            endDate: now.addingTimeInterval(1),
+            ekReminderID: "test-id"
+        )
+        #expect(reminder.isUrgent(from: now) == true)
+    }
+
+    @Test("isExpired true when endDate equals now")
+    func isExpiredAtExactlyZero() {
+        let now = Date()
+        let reminder = ActiveReminder(
+            id: UUID(),
+            text: "Test",
+            endDate: now,
+            ekReminderID: "test-id"
+        )
+        #expect(reminder.isExpired(from: now) == true)
+    }
+
+    @Test("displayTime zero-pads single digit seconds")
+    func displayTimeZeroPads() {
+        let now = Date()
+        let reminder = ActiveReminder(
+            id: UUID(),
+            text: "Test",
+            endDate: now.addingTimeInterval(65),
+            ekReminderID: "test-id"
+        )
+        #expect(reminder.displayTime(from: now) == "1:05")
+    }
+
+    @Test("remainingSeconds rounds up fractional seconds")
+    func remainingSecondsRoundsUp() {
+        let now = Date()
+        let reminder = ActiveReminder(
+            id: UUID(),
+            text: "Test",
+            endDate: now.addingTimeInterval(0.4),
+            ekReminderID: "test-id"
+        )
+        #expect(reminder.remainingSeconds(from: now) == 1)
+    }
 }

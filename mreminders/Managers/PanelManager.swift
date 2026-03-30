@@ -54,6 +54,7 @@ final class FloatingPanel: NSPanel {
 final class TransparentContainerView: NSView {
     override var isOpaque: Bool { false }
     override var isFlipped: Bool { true }
+    private var hasCleared = false
 
     override func draw(_ dirtyRect: NSRect) {
         NSColor.clear.set()
@@ -62,11 +63,14 @@ final class TransparentContainerView: NSView {
 
     override func layout() {
         super.layout()
-        // On every layout pass, force-clear any opaque backgrounds
-        // that SwiftUI's hosting view may have reintroduced
-        clearBackgrounds(self)
+        if !hasCleared {
+            hasCleared = true
+            clearBackgrounds(self)
+        }
     }
 
+    /// Force-clear opaque backgrounds that SwiftUI's hosting view introduces.
+    /// Called once after first layout when the view hierarchy is populated.
     private func clearBackgrounds(_ view: NSView) {
         for subview in view.subviews {
             if !(subview is NSVisualEffectView) {
@@ -85,6 +89,7 @@ final class TransparentContainerView: NSView {
 final class PanelManager {
 
     private(set) var panel: FloatingPanel?
+    private var screenObserver: Any?
 
     private static let positionXKey = "panelPositionX"
     private static let positionYKey = "panelPositionY"
@@ -127,6 +132,25 @@ final class PanelManager {
 
         panel.orderFrontRegardless()
         self.panel = panel
+
+        screenObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.validatePanelPosition()
+            }
+        }
+    }
+
+    private func validatePanelPosition() {
+        guard let panel else { return }
+        let screenUnion = NSScreen.screens.reduce(NSRect.zero) { $0.union($1.visibleFrame) }
+        if !screenUnion.contains(panel.frame.origin) {
+            panel.center()
+            PanelManager.savePosition(panel.frame.origin)
+        }
     }
 
     static func savePosition(_ origin: NSPoint) {
