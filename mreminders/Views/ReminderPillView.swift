@@ -30,8 +30,8 @@ struct ReminderPillView: View {
                 }
                 .foregroundStyle(
                     isUrgent || isExpired
-                        ? Color.red.opacity(0.9)
-                        : Color.primary.opacity(0.85)
+                        ? Color.red
+                        : Color.black.opacity(0.55)
                 )
 
                 PillSeparator(isUrgent: isUrgent || isExpired)
@@ -40,8 +40,8 @@ struct ReminderPillView: View {
                     .font(.system(size: 13))
                     .foregroundStyle(
                         isUrgent || isExpired
-                            ? Color.primary.opacity(0.95)
-                            : Color.primary.opacity(0.9)
+                            ? Color.red.opacity(0.9)
+                            : Color.black.opacity(0.75)
                     )
                     .lineLimit(1)
                     .truncationMode(.tail)

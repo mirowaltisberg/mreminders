@@ -25,6 +25,8 @@ struct PillStackView: View {
         }
         .padding(12)
         .fixedSize()
+        .preferredColorScheme(.light)
+        .environment(\.colorScheme, .light)
         .contextMenu {
             Button("Quit mreminders") {
                 NSApplication.shared.terminate(nil)

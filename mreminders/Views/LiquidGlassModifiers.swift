@@ -30,35 +30,18 @@ struct GlassPillBackground: View {
 
     private var glassPillLegacy: some View {
         Capsule()
-            .fill(.ultraThinMaterial)
+            .fill(Color.white.opacity(0.75))
             .overlay {
                 Capsule()
                     .strokeBorder(
-                        LinearGradient(
-                            colors: isUrgent
-                                ? [Color.red.opacity(0.4), Color.red.opacity(0.2)]
-                                : [Color.white.opacity(0.3), Color.white.opacity(0.1)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 1
+                        isUrgent
+                            ? Color.red.opacity(0.3)
+                            : Color.white.opacity(0.9),
+                        lineWidth: 0.5
                     )
             }
-            .overlay(alignment: .top) {
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.15), Color.clear],
-                            startPoint: .top,
-                            endPoint: .center
-                        )
-                    )
-                    .frame(height: 18)
-                    .padding(.horizontal, 1)
-                    .padding(.top, 1)
-            }
-            .shadow(color: Color.black.opacity(0.12), radius: 16, x: 0, y: 8)
-            .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(0.15), radius: 12, x: 0, y: 4)
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
 }
 
@@ -98,12 +81,12 @@ struct GlassCircleButton: View {
                     .foregroundStyle(
                         style == .urgentDismiss
                             ? Color.red.opacity(0.8)
-                            : Color.primary.opacity(0.55)
+                            : Color.black.opacity(0.4)
                     )
             case .add:
                 Image(systemName: "plus")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color.accentColor.opacity(0.9))
+                    .foregroundStyle(Color.accentColor)
             }
         }
     }
@@ -124,21 +107,17 @@ struct GlassCircleButton: View {
 
     private var circleLegacy: some View {
         Circle()
-            .fill(.ultraThinMaterial)
+            .fill(Color.white.opacity(0.65))
             .overlay {
                 Circle()
                     .strokeBorder(
-                        LinearGradient(
-                            colors: style == .urgentDismiss
-                                ? [Color.red.opacity(0.4), Color.red.opacity(0.2)]
-                                : [Color.white.opacity(0.3), Color.white.opacity(0.1)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 1
+                        style == .urgentDismiss
+                            ? Color.red.opacity(0.3)
+                            : Color.white.opacity(0.85),
+                        lineWidth: 0.5
                     )
             }
-            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+            .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 2)
     }
 }
 
@@ -150,14 +129,10 @@ struct PillSeparator: View {
     var body: some View {
         Rectangle()
             .fill(
-                LinearGradient(
-                    colors: isUrgent
-                        ? [Color.red.opacity(0.02), Color.red.opacity(0.3), Color.red.opacity(0.02)]
-                        : [Color.primary.opacity(0.02), Color.primary.opacity(0.2), Color.primary.opacity(0.02)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+                isUrgent
+                    ? Color.red.opacity(0.25)
+                    : Color.black.opacity(0.12)
             )
-            .frame(width: 1, height: 18)
+            .frame(width: 1, height: 16)
     }
 }

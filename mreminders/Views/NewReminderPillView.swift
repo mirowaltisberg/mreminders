@@ -24,7 +24,7 @@ struct NewReminderPillView: View {
                 TextField("Type reminder...", text: $text)
                     .textFieldStyle(.plain)
                     .font(.system(size: 13))
-                    .foregroundStyle(Color.primary.opacity(0.9))
+                    .foregroundStyle(Color.black.opacity(0.75))
                     .focused($textFieldFocused)
                     .onSubmit {
                         submitReminder()
@@ -76,7 +76,7 @@ struct NewReminderPillView: View {
                     }
             }
         }
-        .foregroundStyle(Color.primary.opacity(0.7))
+        .foregroundStyle(Color.black.opacity(0.5))
     }
 
     // MARK: - Actions

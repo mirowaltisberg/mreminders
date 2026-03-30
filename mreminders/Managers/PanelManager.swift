@@ -5,11 +5,12 @@ import SwiftUI
 
 final class FloatingPanel: NSPanel {
     override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
 
     init() {
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
-            styleMask: [.borderless, .nonactivatingPanel],
+            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -22,6 +23,7 @@ final class FloatingPanel: NSPanel {
         isOpaque = false
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
+        appearance = NSAppearance(named: .aqua)
 
         if let savedOrigin = PanelManager.loadPosition() {
             setFrameOrigin(savedOrigin)
@@ -44,6 +46,39 @@ final class FloatingPanel: NSPanel {
     }
 }
 
+// MARK: - Transparent Container
+
+/// Custom NSView that explicitly draws nothing — guarantees full transparency.
+/// NSHostingView draws an opaque background by default that cannot be cleared
+/// through standard API. This container sits underneath and draws clear.
+final class TransparentContainerView: NSView {
+    override var isOpaque: Bool { false }
+    override var isFlipped: Bool { true }
+
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.clear.set()
+        dirtyRect.fill()
+    }
+
+    override func layout() {
+        super.layout()
+        // On every layout pass, force-clear any opaque backgrounds
+        // that SwiftUI's hosting view may have reintroduced
+        clearBackgrounds(self)
+    }
+
+    private func clearBackgrounds(_ view: NSView) {
+        for subview in view.subviews {
+            if !(subview is NSVisualEffectView) {
+                subview.wantsLayer = true
+                subview.layer?.backgroundColor = .clear
+                subview.layer?.isOpaque = false
+            }
+            clearBackgrounds(subview)
+        }
+    }
+}
+
 // MARK: - PanelManager
 
 @MainActor
@@ -57,24 +92,40 @@ final class PanelManager {
     func createPanel<Content: View>(with content: Content) {
         let panel = FloatingPanel()
 
-        let hostingView = NSHostingView(rootView: content)
-        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        // 1. Create transparent container as the panel's content view
+        let container = TransparentContainerView()
+        container.wantsLayer = true
+        container.layer?.backgroundColor = .clear
+        container.layer?.isOpaque = false
+        panel.contentView = container
 
-        let containerView = NSView(frame: panel.contentView!.bounds)
-        containerView.wantsLayer = true
-        containerView.layer?.backgroundColor = .clear
-        containerView.addSubview(hostingView)
+        // 2. Create hosting view with light appearance for white glass
+        let hostingView = NSHostingView(
+            rootView: content
+                .environment(\.colorScheme, .light)
+        )
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        hostingView.wantsLayer = true
+        hostingView.layer?.backgroundColor = .clear
+        hostingView.layer?.isOpaque = false
+        hostingView.appearance = NSAppearance(named: .aqua)
+
+        container.addSubview(hostingView)
 
         NSLayoutConstraint.activate([
-            hostingView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            hostingView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            hostingView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            hostingView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            hostingView.topAnchor.constraint(equalTo: container.topAnchor),
+            hostingView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            hostingView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            hostingView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
         ])
 
-        panel.contentView = containerView
-        panel.orderFrontRegardless()
+        // 3. Re-enforce transparency after content is set
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = false
+        panel.invalidateShadow()
 
+        panel.orderFrontRegardless()
         self.panel = panel
     }
 
