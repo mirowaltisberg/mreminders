@@ -1,73 +1,107 @@
 # mreminders
 
-A lightweight macOS desktop reminder app. Floating pill widget, countdown timers, synced to Apple Reminders.
+A tiny macOS reminder app that floats on your desktop. For people who forget things 5 seconds after thinking of them.
 
-Built for people who get easily distracted — create a reminder in under 3 seconds, get notified when time's up.
+Inspired by [DeskMinder](https://deskminder.appps.od.ua/).
 
-## Features
+---
 
-- **Floating pill widget** — always-on-top, draggable, lives on every Space
-- **Countdown timers** — live mm:ss display, multiple simultaneous timers
-- **Apple Reminders sync** — every reminder syncs via iCloud to iPhone, iPad, Apple Watch
-- **Liquid Glass UI** — native macOS 26 glass effect with light-mode fallback
-- **Zero friction** — type text, set time, press Return. Done.
-- **No Dock icon** — runs silently as an accessory app
+**Type. Set time. Return. That's it.**
 
-## Requirements
+A translucent pill sits on your desktop. You type a reminder, set a duration, and press Return. It counts down. When it hits zero, you get slapped with a notification. No accounts, no cloud, no complexity.
 
-- macOS 14.0+ (Sonoma)
-- Xcode 26+ / Swift 6
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen)
+Every reminder syncs to Apple Reminders instantly — so it shows up on your iPhone, iPad, and Apple Watch too.
 
-## Setup
+## What it looks like
 
-```bash
-# Install XcodeGen if needed
-brew install xcodegen
+A floating pill widget with Apple's Liquid Glass material:
 
-# Generate Xcode project
-xcodegen generate
-
-# Build and run
-xcodebuild -project mreminders.xcodeproj -scheme mreminders -configuration Debug build
-open ~/Library/Developer/Xcode/DerivedData/mreminders-*/Build/Products/Debug/mreminders.app
+```
+  (x)  [ 04:32  |  Join standup call  ]
+  (x)  [ 12:15  |  Check CI build     ]
+  (+)  [ 10 min |  Type reminder...   ]
 ```
 
-Or open `mreminders.xcodeproj` in Xcode and press Cmd+R.
+- Each active timer is its own pill, counting down live
+- Pill turns red when < 60 seconds remain
+- Click X to dismiss, scroll wheel to adjust time
+- Drag to reposition anywhere on screen
 
-## Usage
+## Install
 
-| Action | How |
+**Requirements:** macOS 14+ (Sonoma), Xcode 26+, [XcodeGen](https://github.com/yonaskolb/XcodeGen)
+
+```bash
+git clone https://github.com/mirowaltisberg/mreminders.git
+cd mreminders
+brew install xcodegen   # if you don't have it
+xcodegen generate
+```
+
+Then either:
+
+```bash
+# Terminal
+xcodebuild -scheme mreminders build && open ~/Library/Developer/Xcode/DerivedData/mreminders-*/Build/Products/Debug/mreminders.app
+```
+
+Or open `mreminders.xcodeproj` in Xcode and hit Cmd+R.
+
+On first launch, grant **Reminders** and **Notifications** permissions when prompted.
+
+## How to use
+
+| | |
 |---|---|
-| Set time | Scroll wheel over time area, or click to type |
-| Create reminder | Type text + press Return |
-| Dismiss timer | Click the X button |
-| Move widget | Drag anywhere on the pill |
-| Quit | Right-click → Quit mreminders |
+| **Create reminder** | Type text, press Return |
+| **Set time** | Scroll wheel over the time, or click to type (1-999 min) |
+| **Dismiss timer** | Click the X button on any pill |
+| **Move widget** | Drag the pill stack anywhere |
+| **Quit** | Right-click the widget |
 
-## Architecture
+The widget floats above all windows, appears on every Space, and has no Dock icon.
+
+## How it works
+
+- **EventKit** is the source of truth. Every reminder is an `EKReminder` in a dedicated "mreminders" list. iCloud syncs it everywhere.
+- **Timer engine** stores end dates (not remaining seconds) so countdowns survive sleep/wake.
+- **NSPanel** with `.nonactivatingPanel` style — clicking the widget never steals focus from your current app.
+- **Liquid Glass** on macOS 26+ via `.glassEffect()`, with `.ultraThinMaterial` fallback on older versions.
+
+## Project structure
 
 ```
 mreminders/
-├── mremindersApp.swift          # SwiftUI App entry point
-├── AppDelegate.swift            # NSPanel setup, permissions, wiring
-├── Models/
-│   └── ActiveReminder.swift     # Timer data model
-├── Managers/
-│   ├── ReminderManager.swift    # EventKit + timer engine
-│   ├── NotificationManager.swift
-│   └── PanelManager.swift       # Floating NSPanel + position persistence
-└── Views/
-    ├── PillStackView.swift      # Main widget layout
-    ├── ReminderPillView.swift   # Active timer pill
-    ├── NewReminderPillView.swift # Input pill
-    └── LiquidGlassModifiers.swift # Glass material + buttons
+  mremindersApp.swift             @main, SwiftUI lifecycle
+  AppDelegate.swift               Panel + permissions + wiring
+  Models/
+    ActiveReminder.swift          Timer data model
+  Managers/
+    ReminderManager.swift         EventKit + 1s timer tick
+    NotificationManager.swift     UNUserNotificationCenter
+    PanelManager.swift            Floating NSPanel, position memory
+  Views/
+    PillStackView.swift           Vertical pill layout
+    ReminderPillView.swift        Active timer (countdown + X)
+    NewReminderPillView.swift     Input pill (time + text)
+    LiquidGlassModifiers.swift    Glass materials + buttons
 ```
 
-## Tech Stack
+## Roadmap
 
-Swift 6 · SwiftUI · AppKit (NSPanel) · EventKit · UserNotifications · Combine
+- [ ] Full-screen notification overlay (the killer feature)
+- [ ] Snooze (1, 5, 10, 15, 30 min)
+- [ ] Menu bar mode
+- [ ] Global keyboard shortcut to show/hide
+- [ ] Task mode with ADHD focus sounds
+- [ ] History window
+- [ ] Settings
+- [ ] Multi-monitor support
+
+## Built with
+
+Swift 6 / SwiftUI / AppKit / EventKit / Combine
 
 ## License
 
-Private project.
+MIT
